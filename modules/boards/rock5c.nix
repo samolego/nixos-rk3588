@@ -1,0 +1,53 @@
+# =========================================================================
+#      Rock 5 Model C Specific Configuration
+# =========================================================================
+{rk3588, ...}: let
+  pkgsKernel = rk3588.pkgsKernel;
+in {
+  imports = [
+    ./base.nix
+    ./dtb-install.nix
+  ];
+
+  boot = {
+    kernelPackages = pkgsKernel.linuxPackagesFor (pkgsKernel.callPackage ../../pkgs/kernel/vendor.nix {});
+
+    # kernelParams copy from rock5a's official debian image's /boot/extlinux/extlinux.conf
+    # https://www.kernel.org/doc/html/latest/admin-guide/kernel-parameters.html
+    kernelParams = [
+      "rootwait"
+      "rw" # load rootfs as read-write
+
+      "earlycon" # enable early console, so we can see the boot messages via serial port / HDMI
+      "consoleblank=0" # disable console blanking(screen saver)
+      "console=tty0"
+      "console=ttyAML0,115200n8"
+      "console=ttyS0,1500000n8"
+      "console=ttyS2,1500000n8"
+      "console=ttyFIQ0,1500000n8"
+
+      "coherent_pool=2M"
+      "irqchip.gicv3_pseudo_nmi=0"
+
+      # show boot logo
+      "splash"
+      "plymouth.ignore-serial-consoles"
+
+      # docker optimizations
+      "cgroup_enable=cpuset"
+      "cgroup_memory=1"
+      "cgroup_enable=memory"
+      "swapaccount=1"
+    ];
+  };
+
+  # Radxa ROCK 5C DTB
+  hardware = {
+    deviceTree = {
+      name = "rockchip/rk3588s-rock-5c.dtb";
+      overlays = [];
+    };
+
+    firmware = [];
+  };
+}
